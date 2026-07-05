@@ -1,13 +1,13 @@
 # Nuix Local LLM API
 
-Windows 上の Ollama を使って、Nuix から呼べる OpenAI API 互換のローカル LLM API を立てるための最小構成です。
+Windows 上の Ollama を使って、Nuix から呼べる OpenAI API 互換のLocal LLM API を構築する最小構成。
 
 ## 構成
 
 - API server: Ollama
-- OpenAI互換 Base URL: `http://localhost:11434/v1`
+- OpenAI互換 URL: `http://localhost:11434/v1`
 - 初期確認モデル: `qwen3:8b`
-- 32B確認モデル: `qwen3:32b`
+- Qwen3-32b: `qwen3:32b`
 - モデル設定: `config/ollama-models.json`
 
 ## 前提
@@ -16,15 +16,13 @@ Windows 上の Ollama を使って、Nuix から呼べる OpenAI API 互換の�
 - NVIDIA GPU
 - Ollama for Windows がインストール済み
   -  `irm https://ollama.com/install.ps1 | iex`
-- PowerShell でこのリポジトリを開いている
+- PowerShell でこのリポジトリ内に移動
 
 ## 1. Ollama を起動
 
 ```powershell
 .\scripts\start-ollama-server.ps1
 ```
-
-すでに Ollama が起動している場合は、そのまま終了します。
 
 ## 2. qwen3:8b を取得
 
@@ -44,7 +42,7 @@ Windows 上の Ollama を使って、Nuix から呼べる OpenAI API 互換の�
 .\scripts\test-openai-chat.ps1 -Profile qwen3-8b
 ```
 
-プロンプトを指定して確認する場合:
+（プロンプトを指定して確認する場合）:
 
 ```powershell
 .\scripts\test-openai-chat.ps1 -Profile qwen3-8b -Prompt "Say hello world in one short sentence."
