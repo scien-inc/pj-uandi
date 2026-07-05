@@ -2,7 +2,7 @@
 
 ## 方針
 
-初期実装では独自 API プロキシを作らず、Ollama の OpenAI互換 API をそのまま Nuix から呼び出す。理由は、要件が `Windows native`、`WSL不使用`、`11434番ポート`、`OpenAI API互換` であり、Ollama がこの境界を最小構成で満たせるため。
+初期実装では独自 API プロキシを作らず、Ollama の OpenAI互換 API をそのまま使う。理由は、要件が `Windows native`、`WSL不使用`、`11434番ポート`、`OpenAI API互換` であり、Ollama がこの境界を最小構成で満たせるため。
 
 ## API 境界
 
@@ -12,7 +12,7 @@
 - Chat endpoint: `POST /v1/chat/completions`
 - Model list endpoint: `GET /v1/models`
 
-Nuix が Ollama native API を要求する場合のみ、次も確認対象にする。
+モデルの事前ロード・アンロードでは、Ollama native API も利用する。
 
 - Native chat endpoint: `POST /api/chat`
 - Native model preload/unload endpoint: `POST /api/generate`
@@ -43,19 +43,6 @@ Ollama はモデルを使ったタイミングでロードする。初回応答�
 .\scripts\unload-model.ps1 -Profile qwen3-8b
 .\scripts\unload-model.ps1 -Profile qwen3-32b
 ```
-
-## Nuix 側設定案
-
-同一 Windows ワークステーション上の Nuix から呼ぶ場合:
-
-- URL / Base URL: `http://localhost:11434/v1`
-- Model: `qwen3:8b` または `qwen3:32b`
-- API key: `ollama`
-
-別ホストの Nuix から呼ぶ場合:
-
-- URL / Base URL: `http://<LLMサーバーIP>:11434/v1`
-- Windows Firewall と Ollama の bind 設定を別途確認する。
 
 ## 疎通確認
 

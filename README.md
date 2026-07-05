@@ -1,6 +1,6 @@
-# Nuix Local LLM API
+# Local LLM API
 
-Windows 上の Ollama を使って、Nuix から呼べる OpenAI API 互換のLocal LLM API を構築する最小構成。
+Windows 上の Ollama を使って、OpenAI API 互換の Local LLM API を構築する最小構成。
 
 ## 構成
 

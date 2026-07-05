@@ -29,4 +29,3 @@ logs/
 *.log
 tmp/
 temp/
-benchmarks/*.csv
