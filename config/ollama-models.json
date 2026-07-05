@@ -1,0 +1,19 @@
+{
+  "ollamaHost": "http://localhost:11434",
+  "openAiBaseUrl": "http://localhost:11434/v1",
+  "defaultProfile": "qwen3-8b",
+  "profiles": {
+    "qwen3-8b": {
+      "model": "qwen3:8b",
+      "purpose": "local smoke test and speed-oriented PoC",
+      "keepAlive": "30m",
+      "notes": "Ollama library Q4_K_M model, about 5.2GB. Use this first for local verification."
+    },
+    "qwen3-32b": {
+      "model": "qwen3:32b",
+      "purpose": "quality-oriented PoC for the stated 32B requirement",
+      "keepAlive": "30m",
+      "notes": "Ollama library Q4_K_M model, about 20GB. Confirm available VRAM before use."
+    }
+  }
+}

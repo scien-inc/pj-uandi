@@ -1,0 +1,31 @@
+# Source materials and Codex extraction artifacts
+documents/
+codex/extracted/
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# Local runtimes and dependencies
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.pyc
+
+# LLM/model artifacts
+models/
+*.gguf
+*.safetensors
+*.bin
+*.onnx
+*.pt
+*.pth
+*.ckpt
+
+# Logs and temporary outputs
+logs/
+*.log
+tmp/
+temp/
