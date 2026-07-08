@@ -1,6 +1,6 @@
 param(
-    [ValidateSet("OpenAI", "Ollama")]
-    [string]$Protocol = "OpenAI",
+    [ValidateSet("All", "OpenAI", "Ollama")]
+    [string]$Protocol = "All",
     [string]$Profile = "qwen3-8b",
     [string]$Prompt = "Say hello world in one short sentence.",
     [double]$Temperature = 0.2
@@ -27,34 +27,50 @@ $body = @{
     )
 }
 
-if ($Protocol -eq "OpenAI") {
-    $uri = "$($modelConfig.OpenAiBaseUrl)/chat/completions"
-    Write-Host "POST $uri"
-    Write-Host "protocol=OpenAI"
-    Write-Host "model=$($modelConfig.Model)"
+function Invoke-ChatCheck {
+    param(
+        [ValidateSet("OpenAI", "Ollama")]
+        [string]$TargetProtocol
+    )
 
-    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-    $result = Invoke-OllamaJson -Method Post -Uri $uri -Body $body
-    $stopwatch.Stop()
-    $content = $result.choices[0].message.content
+    if ($TargetProtocol -eq "OpenAI") {
+        $uri = "$($modelConfig.OpenAiBaseUrl)/chat/completions"
+        Write-Host "POST $uri"
+        Write-Host "protocol=OpenAI"
+        Write-Host "model=$($modelConfig.Model)"
+
+        $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+        $result = Invoke-OllamaJson -Method Post -Uri $uri -Body $body
+        $stopwatch.Stop()
+        $content = $result.choices[0].message.content
+    }
+    else {
+        $uri = "$($modelConfig.OllamaHost)/api/chat"
+        Write-Host "POST $uri"
+        Write-Host "protocol=Ollama"
+        Write-Host "model=$($modelConfig.Model)"
+
+        $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+        $result = Invoke-OllamaJson -Method Post -Uri $uri -Body $body
+        $stopwatch.Stop()
+        $content = $result.message.content
+    }
+
+    if ([string]::IsNullOrWhiteSpace($content)) {
+        throw "$TargetProtocol chat API returned no response content."
+    }
+
+    Write-Host ""
+    Write-Host "Elapsed: $([math]::Round($stopwatch.Elapsed.TotalSeconds, 2)) sec"
+    Write-Host "Response:"
+    $content
+    Write-Host ""
+}
+
+if ($Protocol -eq "All") {
+    Invoke-ChatCheck -TargetProtocol OpenAI
+    Invoke-ChatCheck -TargetProtocol Ollama
 }
 else {
-    $uri = "$($modelConfig.OllamaHost)/api/chat"
-    Write-Host "POST $uri"
-    Write-Host "protocol=Ollama"
-    Write-Host "model=$($modelConfig.Model)"
-
-    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-    $result = Invoke-OllamaJson -Method Post -Uri $uri -Body $body
-    $stopwatch.Stop()
-    $content = $result.message.content
+    Invoke-ChatCheck -TargetProtocol $Protocol
 }
-
-if ([string]::IsNullOrWhiteSpace($content)) {
-    throw "Chat API returned no response content."
-}
-
-Write-Host ""
-Write-Host "Elapsed: $([math]::Round($stopwatch.Elapsed.TotalSeconds, 2)) sec"
-Write-Host "Response:"
-$content
