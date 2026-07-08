@@ -36,22 +36,24 @@ Windows 上の Ollama を使って、OpenAI API 互換の Local LLM API を構�
 .\scripts\load-model.ps1 -Profile qwen3-8b
 ```
 
-## 4. OpenAI互換 API の疎通確認
+## 4. API の疎通確認
 
 ```powershell
-.\scripts\test-openai-chat.ps1 -Profile qwen3-8b
+.\scripts\test-chat.ps1 -Protocol OpenAI -Profile qwen3-8b
+.\scripts\test-chat.ps1 -Protocol Ollama -Profile qwen3-8b
 ```
 
 （プロンプトを指定して確認する場合）:
 
 ```powershell
-.\scripts\test-openai-chat.ps1 -Profile qwen3-8b -Prompt "Say hello world in one short sentence."
+.\scripts\test-chat.ps1 -Protocol OpenAI -Profile qwen3-8b -Prompt "Say hello world in one short sentence."
 ```
 
 内部では次の API を呼びます。
 
 ```text
-POST http://localhost:11434/v1/chat/completions
+OpenAI互換: POST http://localhost:11434/v1/chat/completions
+Ollama protocol: POST http://localhost:11434/api/chat
 model: qwen3:8b
 ```
 
@@ -62,7 +64,8 @@ model: qwen3:8b
 ```powershell
 .\scripts\setup-ollama.ps1 -Profile qwen3-32b
 .\scripts\load-model.ps1 -Profile qwen3-32b
-.\scripts\test-openai-chat.ps1 -Profile qwen3-32b
+.\scripts\test-chat.ps1 -Protocol OpenAI -Profile qwen3-32b
+.\scripts\test-chat.ps1 -Protocol Ollama -Profile qwen3-32b
 ```
 
 OpenAI互換 API では、リクエストの `model` を変えるだけでモデルを切り替えます。
