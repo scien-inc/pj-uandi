@@ -5,10 +5,14 @@ Windows 上の Ollama を使って、OpenAI API 互換の Local LLM API を構�
 ## 構成
 
 - API server: Ollama
-- OpenAI互換 URL: `http://localhost:11434/v1`
 - 初期確認モデル: `qwen3:8b`
 - Qwen3-32b: `qwen3:32b`
 - モデル設定: `config/ollama-models.json`
+```text
+OpenAI互換: POST http://localhost:11434/v1/chat/completions
+Ollama protocol: POST http://localhost:11434/api/chat
+model: qwen3:8b
+```
 
 ## 前提
 
@@ -47,16 +51,6 @@ Windows 上の Ollama を使って、OpenAI API 互換の Local LLM API を構�
 ```powershell
 .\scripts\test-chat.ps1 -Profile qwen3-8b -Prompt "Say hello world in one short sentence."
 ```
-
-デフォルトでは次の2つの API を両方確認します。
-
-```text
-OpenAI互換: POST http://localhost:11434/v1/chat/completions
-Ollama protocol: POST http://localhost:11434/api/chat
-model: qwen3:8b
-```
-
-片方だけ確認したい場合は `-Protocol OpenAI` または `-Protocol Ollama` を指定してください。
 
 ## 5. qwen3:32b に切り替える
 
