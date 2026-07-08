@@ -11,7 +11,6 @@ Windows 上の Ollama を使って、OpenAI API 互換の Local LLM API を構�
 ```text
 OpenAI互換: POST http://localhost:11434/v1/chat/completions
 Ollama protocol: POST http://localhost:11434/api/chat
-model: qwen3:8b
 ```
 
 ## 前提
