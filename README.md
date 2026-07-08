@@ -1,6 +1,6 @@
 # Local LLM API
 
-Windows 上の Ollama を使って、OpenAI API 互換の Local LLM API を構築する最小構成。
+Windows 上の Ollama を使って、OpenAI API 互換の Local LLM API を構築します。
 
 ## 構成
 
@@ -37,7 +37,7 @@ Windows 上の Ollama を使って、OpenAI API 互換の Local LLM API を構�
 ```
 
 ## 4. API の疎通確認
-
+- OpenAI API 互換の場合、上を。Ollama Protocol の場合、下を使用してください。
 ```powershell
 .\scripts\test-chat.ps1 -Protocol OpenAI -Profile qwen3-8b
 .\scripts\test-chat.ps1 -Protocol Ollama -Profile qwen3-8b
@@ -58,9 +58,7 @@ model: qwen3:8b
 ```
 
 ## 5. qwen3:32b に切り替える
-
-32B はモデルサイズが大きいため、まだ動作未確認
-
+- 同様に、OpenAI API 互換の場合が上、Ollama Protocol の場合が下。
 ```powershell
 .\scripts\setup-ollama.ps1 -Profile qwen3-32b
 .\scripts\load-model.ps1 -Profile qwen3-32b
