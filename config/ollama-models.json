@@ -1,19 +1,38 @@
 {
   "ollamaHost": "http://localhost:11434",
   "openAiBaseUrl": "http://localhost:11434/v1",
-  "defaultProfile": "qwen3-8b",
+  "defaultProfile": "qwen3-vl-32b-q4_K_M",
+  "runtime": {
+    "startupTaskName": "LocalLlmOllamaRuntime",
+    "startupTimeoutSeconds": 60,
+    "logDirectory": "logs",
+    "keepAlive": "24h",
+    "watchIntervalSeconds": 300
+  },
   "profiles": {
-    "qwen3-8b": {
-      "model": "qwen3:8b",
-      "purpose": "local smoke test and speed-oriented PoC",
+    "qwen3-vl-32b-q4_K_M": {
+      "model": "qwen3-vl:32b-instruct-q4_K_M",
+      "purpose": "default customer-required Qwen3 32B vision-language profile for Nuix-adjacent forensic workflows",
       "keepAlive": "30m",
-      "notes": "Ollama library Q4_K_M model, about 5.2GB. Use this first for local verification."
+      "notes": "Default profile because the customer requires Qwen3 32B VL. Use for image, scanned document, screenshot, and UI-adjacent workflows; keep context modest on 32GB VRAM."
     },
-    "qwen3-32b": {
-      "model": "qwen3:32b",
-      "purpose": "quality-oriented PoC for the stated 32B requirement",
+    "gpt-oss-20b": {
+      "model": "gpt-oss:20b",
+      "purpose": "supplemental text-only model for Nuix RAG, structured reports, and OpenAI-compatible tool workflows",
       "keepAlive": "30m",
-      "notes": "Ollama library Q4_K_M model, about 20GB. Confirm available VRAM before use."
+      "notes": "Supplemental text-only reasoning profile. Use when VL is unnecessary and text RAG/report quality is the priority."
+    },
+    "qwen3.6-27b-q4_K_M": {
+      "model": "qwen3.6:27b-q4_K_M",
+      "purpose": "supplemental high-accuracy Qwen profile for Japanese analysis, coding, tool use, and long-context RAG experiments",
+      "keepAlive": "30m",
+      "notes": "Supplemental Q4_K_M quantized 27B-class Qwen profile. Use when Qwen compatibility or higher reasoning/coding quality is preferred without VL."
+    },
+    "gemma4-26b": {
+      "model": "gemma4:26b",
+      "purpose": "supplemental balanced general-purpose and vision-language capable profile",
+      "keepAlive": "30m",
+      "notes": "Supplemental general/VL-capable comparison profile. Do not keep multiple large models loaded at once on a 32GB VRAM workstation."
     }
   }
 }

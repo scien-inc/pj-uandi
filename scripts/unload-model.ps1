@@ -1,5 +1,5 @@
 param(
-    [string]$Profile = "qwen3-8b"
+    [string]$Profile = ""
 )
 
 . "$PSScriptRoot\lib\OllamaConfig.ps1"

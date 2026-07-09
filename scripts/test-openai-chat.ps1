@@ -1,5 +1,5 @@
 param(
-    [string]$Profile = "qwen3-8b",
+    [string]$Profile = "",
     [string]$Prompt = "Say hello world in one short sentence.",
     [double]$Temperature = 0.2
 )

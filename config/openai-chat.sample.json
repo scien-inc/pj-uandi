@@ -1,5 +1,5 @@
 {
-  "model": "qwen3:8b",
+  "model": "qwen3-vl:32b-instruct-q4_K_M",
   "stream": false,
   "temperature": 0.2,
   "messages": [

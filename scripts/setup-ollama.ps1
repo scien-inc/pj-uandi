@@ -1,6 +1,5 @@
 param(
-    [string[]]$Profile = @("qwen3-8b"),
-    [switch]$All,
+    [string[]]$Profile = @(),
     [switch]$SkipPull
 )
 
@@ -10,7 +9,12 @@ Assert-OllamaCommand | Out-Null
 $baseConfig = Get-OllamaModelConfig -Profile ""
 Assert-OllamaServer -OllamaHost $baseConfig.OllamaHost
 
-$profiles = if ($All) { Get-OllamaProfiles } else { $Profile }
+$profiles = if ($null -eq $Profile -or $Profile.Count -eq 0) {
+    @($baseConfig.Profile)
+}
+else {
+    $Profile
+}
 
 foreach ($profileName in $profiles) {
     $modelConfig = Get-OllamaModelConfig -Profile $profileName
