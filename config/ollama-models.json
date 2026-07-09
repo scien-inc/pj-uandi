@@ -5,27 +5,21 @@
   "profiles": {
     "qwen3-vl-32b-q4_K_M": {
       "model": "qwen3-vl:32b-instruct-q4_K_M",
-      "purpose": "default customer-required Qwen3 32B vision-language profile for Nuix-adjacent forensic workflows",
+      "purpose": "default model",
       "keepAlive": "-1m",
-      "notes": "Default profile because the customer requires Qwen3 32B VL. Use for image, scanned document, screenshot, and UI-adjacent workflows; keep context modest on 32GB VRAM."
+      "notes": ""
     },
     "gpt-oss-20b": {
       "model": "gpt-oss:20b",
-      "purpose": "supplemental text-only model for Nuix RAG, structured reports, and OpenAI-compatible tool workflows",
+      "purpose": "text-based investigation model",
       "keepAlive": "-1m",
-      "notes": "Supplemental text-only reasoning profile. Use when VL is unnecessary and text RAG/report quality is the priority."
+      "notes": "Use when vision-language capability is unnecessary, especially for chat-based investigation and text RAG workflows."
     },
     "qwen3.6-27b-q4_K_M": {
       "model": "qwen3.6:27b-q4_K_M",
-      "purpose": "supplemental high-accuracy Qwen profile for Japanese analysis, coding, tool use, and long-context RAG experiments",
+      "purpose": "general-purpose model",
       "keepAlive": "-1m",
-      "notes": "Supplemental Q4_K_M quantized 27B-class Qwen profile. Use when Qwen compatibility or higher reasoning/coding quality is preferred without VL."
-    },
-    "gemma4-26b": {
-      "model": "gemma4:26b",
-      "purpose": "supplemental balanced general-purpose and vision-language capable profile",
-      "keepAlive": "-1m",
-      "notes": "Supplemental general/VL-capable comparison profile. Do not keep multiple large models loaded at once on a 32GB VRAM workstation."
+      "notes": "Newer Qwen-series model for general-purpose comparison and workflow validation."
     }
   }
 }

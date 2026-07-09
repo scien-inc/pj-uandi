@@ -41,7 +41,56 @@ Model: qwen3-vl:32b-instruct-q4_K_M
 .\scripts\start-ollama-server.ps1
 ```
 
-## 2. モデルを取得
+## 2. モデル設定ファイル
+
+モデル設定は `config/ollama-models.json` で管理します。
+
+主な項目は以下です。
+
+- `ollamaHost`: Ollama native API の接続先
+- `openAiBaseUrl`: OpenAI互換 API の接続先
+- `defaultProfile`: プロファイル未指定時に使う profile 名
+- `profiles`: 利用可能なモデル profile の一覧
+
+各 profile には以下を設定します。
+
+- `model`: Ollama に渡す実際のモデル名
+- `purpose`: その profile の用途説明
+- `keepAlive`: モデルをメモリに保持する時間。`-1m` は自動アンロードしない指定
+- `notes`: 補足説明
+
+デフォルトモデルを変更する場合は、`defaultProfile` を変更します。値には `profiles` 配下に存在する profile 名を指定します。
+
+- gpt-oss-20b に変更する場合
+```json
+{
+  "defaultProfile": "gpt-oss-20b"
+}
+```
+
+モデルを追加する場合は、`profiles` に新しい profile を追加します。profile 名はスクリプトで指定する名前、`model` は Ollama のモデル名です。
+
+```json
+{
+  "profiles": {
+    "new-model-profile": {
+      "model": "ollama-model-name:tag",
+      "purpose": "short purpose",
+      "keepAlive": "-1m",
+      "notes": "optional notes"
+    }
+  }
+}
+```
+
+追加したモデルを取得・ロードする場合:
+
+```powershell
+.\scripts\setup-ollama.ps1 -Profile new-model-profile
+.\scripts\load-model.ps1 -Profile new-model-profile
+```
+
+## 3. モデルを取得
 
 プロファイル未指定の場合、デフォルトの `qwen3-vl-32b-q4_K_M` を取得します。
 
@@ -56,7 +105,7 @@ Model: qwen3-vl:32b-instruct-q4_K_M
 .\scripts\setup-ollama.ps1 -Profile qwen3.6-27b-q4_K_M
 ```
 
-## 3. モデルをロードして保持
+## 4. モデルをロードして保持
 
 プロファイル未指定の場合、`config/ollama-models.json` の `defaultProfile`、つまり `qwen3-vl-32b-q4_K_M` を使います。
 
@@ -80,7 +129,7 @@ Model: qwen3-vl:32b-instruct-q4_K_M
 
 Windows 再起動、Ollama 終了、GPU メモリ不足、手動アンロード時にはモデルはメモリから外れます。
 
-## 4. API の疎通確認
+## 5. API の疎通確認
 
 ```powershell
 .\scripts\test-chat.ps1
@@ -92,7 +141,7 @@ Windows 再起動、Ollama 終了、GPU メモリ不足、手動アンロード�
 .\scripts\test-chat.ps1 -Prompt "Say hello world in one short sentence."
 ```
 
-## 5. モデルを切り替える
+## 6. モデルを切り替える
 
 gpt-oss に切り替える場合:
 
