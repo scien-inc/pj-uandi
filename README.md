@@ -1,6 +1,7 @@
 # Local LLM API
 
 Windows 上の Ollama を使って、OpenAI API 互換の Local LLM API を構築します。
+quick-setup.cmd で簡単にセットアップできます（何かしらエラーが出る場合、手動セットアップで確認するとよいです）。
 
 ## 構成
 
@@ -49,7 +50,7 @@ Model: qwen3-vl:32b-instruct-q4_K_M
 
 - `ollamaHost`: Ollama native API の接続先
 - `openAiBaseUrl`: OpenAI互換 API の接続先
-- `defaultProfile`: プロファイル未指定時に使う profile 名
+- `defaultProfile`: プロファイル未指定時に使う profile 名（普段使用するモデルを設定してあげるとよいです）
 - `profiles`: 利用可能なモデル profile の一覧
 
 各 profile には以下を設定します。
