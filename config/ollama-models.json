@@ -1,6 +1,7 @@
 {
   "ollamaHost": "http://localhost:11434",
   "openAiBaseUrl": "http://localhost:11434/v1",
+  "cudaVisibleDevices": "0",
   "defaultProfile": "qwen3-vl-32b-q4_K_M",
   "profiles": {
     "qwen3-vl-32b-q4_K_M": {

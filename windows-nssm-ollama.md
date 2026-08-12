@@ -173,7 +173,24 @@ $modelDirectory = Join-Path $env:USERPROFILE ".ollama\models"
 
 & $nssm set $serviceName AppEnvironmentExtra `
   "OLLAMA_HOST=127.0.0.1:11434" `
-  "OLLAMA_MODELS=$modelDirectory"
+  "OLLAMA_MODELS=$modelDirectory" `
+  "CUDA_DEVICE_ORDER=PCI_BUS_ID" `
+  "CUDA_VISIBLE_DEVICES=0"
+```
+
+`CUDA_VISIBLE_DEVICES` は使用するGPUの指定です（GPU 0 だけを使う場合は `0`）。`CUDA_DEVICE_ORDER=PCI_BUS_ID` を併せて指定することで、GPU番号が `nvidia-smi` の表示順と一致します。番号の代わりに `nvidia-smi -L` で表示されるUUID（`GPU-xxxxxxxx-...`）を指定すると、GPUの増減や差し替えがあっても対象がずれません。全GPUを使う場合はこの2行を削除します。
+
+設定変更後はサービスの再起動が必要です。
+
+```powershell
+Restart-Service $serviceName
+```
+
+GPUの割り当ては次で確認できます。`ollama ps` の `PROCESSOR` 列が `100% GPU` であればフルGPU推論、`nvidia-smi` で対象GPUのみメモリが消費されていれば固定が効いています。
+
+```powershell
+ollama ps
+nvidia-smi
 ```
 
 接続先は次のとおりです。
