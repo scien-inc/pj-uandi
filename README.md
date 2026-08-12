@@ -50,6 +50,7 @@ Model: qwen3-vl:32b-instruct-q4_K_M
 
 - `ollamaHost`: Ollama native API の接続先
 - `openAiBaseUrl`: OpenAI互換 API の接続先
+- `cudaVisibleDevices`: 使用するGPUの指定（例: `"0"` で GPU 0 のみ使用）。空文字 `""` にすると全GPUを使用
 - `defaultProfile`: プロファイル未指定時に使う profile 名（普段使用するモデルを設定してあげるとよいです）
 - `profiles`: 利用可能なモデル profile の一覧
 
@@ -90,6 +91,33 @@ Model: qwen3-vl:32b-instruct-q4_K_M
 .\scripts\setup-ollama.ps1 -Profile new-model-profile
 .\scripts\load-model.ps1 -Profile new-model-profile
 ```
+
+### GPU の指定
+
+`cudaVisibleDevices` に GPU 番号を設定すると、Ollama が使用するGPUを固定できます。番号は `nvidia-smi` の表示順です。
+
+```json
+{
+  "cudaVisibleDevices": "0"
+}
+```
+
+この設定は `start-ollama-server.ps1` がサーバーを起動するときに適用されます。Ollama が既に起動している場合（タスクトレイ常駐など）は反映されないため、一度停止してから起動し直してください。
+
+```powershell
+.\scripts\stop-ollama-server.ps1
+.\scripts\start-ollama-server.ps1
+.\scripts\load-model.ps1
+```
+
+GPUの割り当ては次で確認できます。
+
+```powershell
+ollama ps      # PROCESSOR 列が「100% GPU」ならフルGPU推論
+nvidia-smi     # 対象GPUのみメモリが消費されていれば固定が効いている
+```
+
+NSSM サービスとして運用する場合、この設定は使われません。`windows-nssm-ollama.md` の手順でサービスの環境変数として設定します。
 
 ## 3. モデルを取得
 
@@ -171,4 +199,21 @@ Qwen3-32b-VL に切り替える場合:
 .\scripts\unload-model.ps1 -Profile qwen3-vl-32b-q4_K_M
 .\scripts\unload-model.ps1 -Profile gpt-oss-20b
 .\scripts\unload-model.ps1 -Profile qwen3.6-27b-q4_K_M
+```
+
+サーバーは起動したまま、モデルだけがメモリから外れます。
+
+## Ollama を停止する
+
+```powershell
+.\scripts\stop-ollama-server.ps1
+```
+
+サーバーごと停止します。Windows サービスとして登録されている場合はサービスを停止し、そうでない場合はプロセス（タスクトレイの `ollama app` とサーバーの `ollama`）を終了します。`cudaVisibleDevices` などサーバー起動時に読まれる設定を変更したときは、このスクリプトで停止してから起動し直してください。
+
+停止できたかどうかは次で確認できます。
+
+```powershell
+Get-Process ollama* -ErrorAction SilentlyContinue                    # 何も返らなければ停止済み
+Get-NetTCPConnection -LocalPort 11434 -ErrorAction SilentlyContinue  # 11434 が空いているか
 ```

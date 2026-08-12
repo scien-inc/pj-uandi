@@ -33,6 +33,12 @@ function Get-OllamaModelConfig {
 
     $profileConfig = $profileProperty.Value
 
+    $cudaVisibleDevices = ""
+    $cudaProperty = $config.PSObject.Properties["cudaVisibleDevices"]
+    if ($null -ne $cudaProperty -and $null -ne $cudaProperty.Value) {
+        $cudaVisibleDevices = [string]$cudaProperty.Value
+    }
+
     return [PSCustomObject]@{
         RepoRoot = $repoRoot
         ConfigPath = $configPath
@@ -43,6 +49,7 @@ function Get-OllamaModelConfig {
         Notes = $profileConfig.notes
         OllamaHost = $config.ollamaHost.TrimEnd("/")
         OpenAiBaseUrl = $config.openAiBaseUrl.TrimEnd("/")
+        CudaVisibleDevices = $cudaVisibleDevices
     }
 }
 
