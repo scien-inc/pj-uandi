@@ -276,6 +276,7 @@ GPU 固定と同じく、サーバーを起動し直さないと反映されま�
 | qwen3-vl 32B | 約 19GB | 約 13GB | 約 32GB（ほぼ上限） |
 
 32B は 48K だと収まらず CPU にあふれる可能性があります。その場合は `-NumCtx 32768` のように下げて計測してください。
+同梱のベンチマークは約 27,000 トークンなので、`-NumCtx 32768` でも切り捨ては発生しません。
 
 ## 7. トークン速度を計測する
 
@@ -283,6 +284,9 @@ GPU 固定と同じく、サーバーを起動し直さないと反映されま�
 
 - `benchmarks/sample-mail-ja.txt`: 約 4 万文字の日本語ダミーメール（65通・すべて架空）
 - `benchmarks/forensic-prompt-ja.txt`: 情報持ち出しの兆候を調査させる指示プロンプト
+
+2つを連結したプロンプトは 40,765 文字で、Qwen3 のトークナイザで **26,532 トークン**です（1トークンあたり約1.5文字）。
+生成 512 トークンを加えても約 27,000 トークンなので、既定の `contextLength` 49152 には十分な余裕があります。
 
 ### 方法1: ベンチマークスクリプト（推奨）
 
@@ -303,8 +307,11 @@ GPU 固定と同じく、サーバーを起動し直さないと反映されま�
 ```text
 Profile                 Run PromptTokens PrefillTps OutTokens GenTps LoadSec ServerSec WallSec
 -------                 --- ------------ ---------- --------- ------ ------- --------- -------
-qwen3-vl-8b-q4_K_M        1        32871     1240.5       512   72.3    0.00     33.60   33.62
+qwen3-vl-8b-q4_K_M        1        26540     1180.4       512   72.3    0.00     29.60   29.63
 ```
+
+`PromptTokens` が 26,000 前後であれば、プロンプトが切り捨てられずに全量処理されています。
+極端に小さい場合はコンテキスト長が足りていません。
 
 - `PrefillTps`: プロンプト処理（prefill）速度
 - `GenTps`: 生成速度。**体感速度はこれ**
@@ -349,8 +356,8 @@ Get-Content -Raw -Encoding UTF8 .\benchmarks\forensic-prompt-ja.txt, .\benchmark
 生成後に統計が表示されます。
 
 ```text
-prompt eval count:    32871 token(s)
-prompt eval rate:     1240.50 tokens/s
+prompt eval count:    26532 token(s)
+prompt eval rate:     1180.40 tokens/s
 eval count:           512 token(s)
 eval rate:            72.30 tokens/s
 ```
