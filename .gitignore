@@ -29,3 +29,6 @@ logs/
 *.log
 tmp/
 temp/
+
+# Benchmark outputs
+benchmarks/results/

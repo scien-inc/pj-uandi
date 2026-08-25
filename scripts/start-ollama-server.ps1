@@ -27,6 +27,11 @@ if (-not [string]::IsNullOrWhiteSpace($gpuSelection.Value)) {
     Write-Host "CUDA_VISIBLE_DEVICES=$($gpuSelection.Value)"
 }
 
+if ($modelConfig.ContextLength -gt 0) {
+    $env:OLLAMA_CONTEXT_LENGTH = [string]$modelConfig.ContextLength
+    Write-Host "OLLAMA_CONTEXT_LENGTH=$($modelConfig.ContextLength)"
+}
+
 Write-Host "Starting Ollama server at $($modelConfig.OllamaHost)..."
 Start-Process -FilePath $ollamaExe -ArgumentList "serve" -WindowStyle Hidden | Out-Null
 
