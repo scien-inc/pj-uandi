@@ -54,6 +54,7 @@ Model: qwen3-vl:8b-instruct-q4_K_M
 - `openAiBaseUrl`: OpenAI互換 API の接続先
 - `cudaVisibleDevices`: 使用するGPUの指定。`"auto"` で自動選択、`"0"` のように番号や UUID を書くと固定、空文字 `""` で全GPU使用
 - `preferredGpuNamePattern`: `"auto"` のときに優先するGPU名（部分一致・正規表現）
+- `contextLength`: Ollama の既定コンテキスト長（`OLLAMA_CONTEXT_LENGTH`）。長文を投げる場合に必要
 - `defaultProfile`: プロファイル未指定時に使う profile 名（普段使用するモデルを設定してあげるとよいです）
 - `profiles`: 利用可能なモデル profile の一覧
 
@@ -251,6 +252,112 @@ gpt-oss に切り替える場合:
 ```
 
 複数のモデルを同時にロードすると GPU メモリを取り合うため、切り替える前に使っていないモデルをアンロードしてください。
+
+### コンテキスト長
+
+Ollama の既定コンテキスト長は 4096 トークンです。これを超える入力は**警告なく切り捨てられます**。
+4万文字のメールを解析させるような用途ではまったく足りないため、`contextLength` で引き上げています。
+
+```json
+{
+  "contextLength": 49152
+}
+```
+
+この値は `start-ollama-server.ps1` がサーバー起動時に `OLLAMA_CONTEXT_LENGTH` として適用します。
+GPU 固定と同じく、サーバーを起動し直さないと反映されません。
+
+コンテキストを広げるとその分だけ KV キャッシュが VRAM を消費します。RTX 5000 Ada (32GB) での概算は次のとおりです。
+
+| モデル | 重み | 48K コンテキストの KV | 合計 |
+|---|---|---|---|
+| qwen3-vl 8B | 約 5GB | 約 7GB | 約 12GB |
+| qwen3-vl 30B-A3B | 約 20GB | 約 4GB | 約 24GB |
+| qwen3-vl 32B | 約 19GB | 約 13GB | 約 32GB（ほぼ上限） |
+
+32B は 48K だと収まらず CPU にあふれる可能性があります。その場合は `-NumCtx 32768` のように下げて計測してください。
+
+## 7. トークン速度を計測する
+
+フォレンジック用途を想定した実測用のデータを同梱しています。
+
+- `benchmarks/sample-mail-ja.txt`: 約 4 万文字の日本語ダミーメール（65通・すべて架空）
+- `benchmarks/forensic-prompt-ja.txt`: 情報持ち出しの兆候を調査させる指示プロンプト
+
+### 方法1: ベンチマークスクリプト（推奨）
+
+デフォルトプロファイルで計測します。
+
+```powershell
+.\scripts\benchmark.ps1
+```
+
+複数プロファイルを比較する場合:
+
+```powershell
+.\scripts\benchmark.ps1 -Profile qwen3-vl-8b-q4_K_M,qwen3-vl-30b-a3b-q4_K_M,qwen3-vl-32b-q4_K_M
+```
+
+出力例:
+
+```text
+Profile                 Run PromptTokens PrefillTps OutTokens GenTps LoadSec ServerSec WallSec
+-------                 --- ------------ ---------- --------- ------ ------- --------- -------
+qwen3-vl-8b-q4_K_M        1        32871     1240.5       512   72.3    0.00     33.60   33.62
+```
+
+- `PrefillTps`: プロンプト処理（prefill）速度
+- `GenTps`: 生成速度。**体感速度はこれ**
+
+モデルのロード時間を除くため、計測前に短いプロンプトでウォームアップしています。また各実行の先頭に実行番号を付け、Ollama のプレフィックスキャッシュに当たらないようにしています。
+
+解析結果の中身も確認する場合:
+
+```powershell
+.\scripts\benchmark.ps1 -SaveResponse
+```
+
+`benchmarks/results/` に保存されます（Git 管理対象外）。
+
+主なオプション:
+
+| オプション | 既定値 | 説明 |
+|---|---|---|
+| `-Profile` | `defaultProfile` | 計測対象。カンマ区切りで複数指定可 |
+| `-NumCtx` | `contextLength` | コンテキスト長。VRAM が足りない場合に下げる |
+| `-NumPredict` | 512 | 生成トークン数。短いと誤差が大きい |
+| `-Runs` | 1 | プロファイルごとの試行回数 |
+| `-Pull` | off | 計測前にモデルを取得する |
+| `-KeepLoaded` | off | 計測後にモデルをアンロードしない |
+| `-SaveResponse` | off | 生成結果をファイルに保存する |
+
+### 方法2: `ollama run --verbose`
+
+スクリプトを使わず手動で見る場合です。4万文字はコマンドライン引数として渡せないため、標準入力から流し込みます。
+
+```powershell
+cmd /c "type benchmarks\forensic-prompt-ja.txt benchmarks\sample-mail-ja.txt | ollama run --verbose qwen3-vl:8b-instruct-q4_K_M"
+```
+
+`cmd /c` を経由しているのは文字化け対策です。Windows PowerShell 5.1 の `$OutputEncoding` は既定が ASCII のため、`Get-Content | ollama run` と直接つなぐと日本語がすべて `?` に化けます。PowerShell だけで完結させたい場合は、先に出力エンコーディングを変更してください。
+
+```powershell
+$OutputEncoding = New-Object System.Text.UTF8Encoding $false
+Get-Content -Raw -Encoding UTF8 .\benchmarks\forensic-prompt-ja.txt, .\benchmarks\sample-mail-ja.txt | ollama run --verbose qwen3-vl:8b-instruct-q4_K_M
+```
+
+生成後に統計が表示されます。
+
+```text
+prompt eval count:    32871 token(s)
+prompt eval rate:     1240.50 tokens/s
+eval count:           512 token(s)
+eval rate:            72.30 tokens/s
+```
+
+`prompt eval count` が極端に小さい場合はプロンプトが切り捨てられています。`contextLength` を上げてサーバーを再起動してください。
+
+初回はモデルのロード時間が混ざるため、**2回目以降の値**を見てください。あわせて `ollama ps` の `PROCESSOR` 列が `100% GPU` であること、`nvidia-smi` で RTX 5000 Ada 側が使われていることも確認してください。CPU にあふれていると桁違いに遅くなります。
 
 ## モデルをメモリから下ろす
 

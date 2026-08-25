@@ -45,6 +45,12 @@ function Get-OllamaModelConfig {
         $preferredGpuNamePattern = [string]$preferredGpuProperty.Value
     }
 
+    $contextLength = 0
+    $contextLengthProperty = $config.PSObject.Properties["contextLength"]
+    if ($null -ne $contextLengthProperty -and $null -ne $contextLengthProperty.Value) {
+        $contextLength = [int]$contextLengthProperty.Value
+    }
+
     return [PSCustomObject]@{
         RepoRoot = $repoRoot
         ConfigPath = $configPath
@@ -57,6 +63,7 @@ function Get-OllamaModelConfig {
         OpenAiBaseUrl = $config.openAiBaseUrl.TrimEnd("/")
         CudaVisibleDevices = $cudaVisibleDevices
         PreferredGpuNamePattern = $preferredGpuNamePattern
+        ContextLength = $contextLength
     }
 }
 
@@ -213,7 +220,8 @@ function Invoke-OllamaJson {
         [ValidateSet("Get", "Post")]
         [string]$Method,
         [string]$Uri,
-        [hashtable]$Body
+        [hashtable]$Body,
+        [int]$TimeoutSec = 600
     )
 
     if ($Method -eq "Get") {
@@ -221,5 +229,10 @@ function Invoke-OllamaJson {
     }
 
     $json = $Body | ConvertTo-Json -Depth 20
-    return Invoke-RestMethod -Method Post -Uri $Uri -ContentType "application/json" -Body $json -TimeoutSec 600
+
+    # Send UTF-8 bytes explicitly. Passing the string directly makes Windows
+    # PowerShell fall back to ISO-8859-1, which corrupts Japanese prompts.
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+
+    return Invoke-RestMethod -Method Post -Uri $Uri -ContentType "application/json; charset=utf-8" -Body $bytes -TimeoutSec $TimeoutSec
 }

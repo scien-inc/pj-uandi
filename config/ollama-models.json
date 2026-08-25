@@ -3,6 +3,7 @@
   "openAiBaseUrl": "http://localhost:11434/v1",
   "cudaVisibleDevices": "auto",
   "preferredGpuNamePattern": "RTX 5000 Ada",
+  "contextLength": 49152,
   "defaultProfile": "qwen3-vl-8b-q4_K_M",
   "profiles": {
     "qwen3-vl-8b-q4_K_M": {

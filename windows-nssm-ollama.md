@@ -191,9 +191,12 @@ $targetGpuUuid = "GPU-yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
 & $nssm set $serviceName AppEnvironmentExtra `
   "OLLAMA_HOST=127.0.0.1:11434" `
   "OLLAMA_MODELS=$modelDirectory" `
+  "OLLAMA_CONTEXT_LENGTH=49152" `
   "CUDA_DEVICE_ORDER=PCI_BUS_ID" `
   "CUDA_VISIBLE_DEVICES=$targetGpuUuid"
 ```
+
+`OLLAMA_CONTEXT_LENGTH` は既定コンテキスト長です。Ollama の既定値は 4096 トークンで、これを超える入力は警告なく切り捨てられます。長文のメール解析を行う場合は必ず引き上げてください。値は `config/ollama-models.json` の `contextLength` と揃えておきます。コンテキストを広げるとその分 KV キャッシュが VRAM を消費する点に注意してください。
 
 UUIDで指定すると、GPUの増減や差し替え、ドライバー更新で番号がずれても対象が変わりません。番号（`CUDA_VISIBLE_DEVICES=1` など）でも指定できます。その場合は `CUDA_DEVICE_ORDER=PCI_BUS_ID` を併せて指定することで、GPU番号が `nvidia-smi` の表示順と一致します。全GPUを使う場合は `CUDA_` で始まる2行を削除します。
 
