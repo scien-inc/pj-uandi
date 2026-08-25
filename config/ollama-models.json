@@ -1,20 +1,39 @@
 {
   "ollamaHost": "http://localhost:11434",
   "openAiBaseUrl": "http://localhost:11434/v1",
-  "cudaVisibleDevices": "0",
-  "defaultProfile": "qwen3-vl-32b-q4_K_M",
+  "cudaVisibleDevices": "auto",
+  "preferredGpuNamePattern": "RTX 5000 Ada",
+  "defaultProfile": "qwen3-vl-8b-q4_K_M",
   "profiles": {
+    "qwen3-vl-8b-q4_K_M": {
+      "model": "qwen3-vl:8b-instruct-q4_K_M",
+      "purpose": "default model (light, text + image)",
+      "keepAlive": "-1m",
+      "notes": "About 6 GB. Same Qwen3-VL family as the 32B model but far lighter and faster."
+    },
+    "qwen3-vl-4b-q4_K_M": {
+      "model": "qwen3-vl:4b-instruct-q4_K_M",
+      "purpose": "lightest model (text + image)",
+      "keepAlive": "-1m",
+      "notes": "About 3 GB. Use when the 8B model is still too slow, or on the 12 GB GPU."
+    },
+    "qwen3-vl-30b-a3b-q4_K_M": {
+      "model": "qwen3-vl:30b-a3b-instruct-q4_K_M",
+      "purpose": "high quality but still fast (MoE, text + image)",
+      "keepAlive": "-1m",
+      "notes": "About 20 GB. Mixture-of-Experts with roughly 3B active parameters, so it is much faster than the dense 32B model at a similar VRAM footprint."
+    },
     "qwen3-vl-32b-q4_K_M": {
       "model": "qwen3-vl:32b-instruct-q4_K_M",
-      "purpose": "default model",
+      "purpose": "previous default, heavy (text + image)",
       "keepAlive": "-1m",
-      "notes": ""
+      "notes": "About 21 GB dense model. Highest quality of the Qwen3-VL profiles, but the slowest."
     },
     "gpt-oss-20b": {
       "model": "gpt-oss:20b",
       "purpose": "text-based investigation model",
       "keepAlive": "-1m",
-      "notes": "Use when vision-language capability is unnecessary, especially for chat-based investigation and text RAG workflows."
+      "notes": "About 14 GB. Use when vision-language capability is unnecessary, especially for chat-based investigation and text RAG workflows."
     },
     "qwen3.6-27b-q4_K_M": {
       "model": "qwen3.6:27b-q4_K_M",

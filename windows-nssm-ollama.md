@@ -168,17 +168,40 @@ NSSMから `ollama.exe serve` を直接起動します。
 
 同じPC上のアプリケーションからのみ使用する場合は、`127.0.0.1` で待ち受けます。
 
+使用するGPUは `CUDA_VISIBLE_DEVICES` で固定します。GPUが複数ある環境では、VRAMの大きいGPU（本構成では **NVIDIA RTX 5000 Ada Generation 32GB**、もう一方は RTX A2000 12GB）を指定します。
+
+GPUの一覧とUUIDを確認します。
+
+```powershell
+nvidia-smi --query-gpu=index,uuid,name,memory.total --format=csv
+```
+
+```text
+index, uuid, name, memory.total [MiB]
+0, GPU-xxxxxxxx-..., NVIDIA RTX A2000, 12282 MiB
+1, GPU-yyyyyyyy-..., NVIDIA RTX 5000 Ada Generation, 32760 MiB
+```
+
+RTX 5000 Ada 側のUUIDを控えて、サービスの環境変数に設定します。
+
 ```powershell
 $modelDirectory = Join-Path $env:USERPROFILE ".ollama\models"
+$targetGpuUuid = "GPU-yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
 
 & $nssm set $serviceName AppEnvironmentExtra `
   "OLLAMA_HOST=127.0.0.1:11434" `
   "OLLAMA_MODELS=$modelDirectory" `
   "CUDA_DEVICE_ORDER=PCI_BUS_ID" `
-  "CUDA_VISIBLE_DEVICES=0"
+  "CUDA_VISIBLE_DEVICES=$targetGpuUuid"
 ```
 
-`CUDA_VISIBLE_DEVICES` は使用するGPUの指定です（GPU 0 だけを使う場合は `0`）。`CUDA_DEVICE_ORDER=PCI_BUS_ID` を併せて指定することで、GPU番号が `nvidia-smi` の表示順と一致します。番号の代わりに `nvidia-smi -L` で表示されるUUID（`GPU-xxxxxxxx-...`）を指定すると、GPUの増減や差し替えがあっても対象がずれません。全GPUを使う場合はこの2行を削除します。
+UUIDで指定すると、GPUの増減や差し替え、ドライバー更新で番号がずれても対象が変わりません。番号（`CUDA_VISIBLE_DEVICES=1` など）でも指定できます。その場合は `CUDA_DEVICE_ORDER=PCI_BUS_ID` を併せて指定することで、GPU番号が `nvidia-smi` の表示順と一致します。全GPUを使う場合は `CUDA_` で始まる2行を削除します。
+
+リポジトリ側の `scripts/show-gpus.ps1` でも、検出されたGPUとUUIDを確認できます（`config/ollama-models.json` の設定に基づき、選択されるGPUに `*` が付きます）。
+
+```powershell
+.\scripts\show-gpus.ps1
+```
 
 設定変更後はサービスの再起動が必要です。
 
@@ -326,7 +349,7 @@ Set-Location "C:\Users\<ユーザー名>\Desktop\scien-UandI\workspace"
 プロファイルを指定する場合は、次のように実行します。
 
 ```powershell
-.\scripts\load-model.ps1 -Profile qwen3-vl-32b-q4_K_M
+.\scripts\load-model.ps1 -Profile qwen3-vl-8b-q4_K_M
 ```
 
 ただし、再起動直後にモデルを事前ロードする必要がなければ、最初のAPIリクエスト時にOllamaがモデルをロードします。

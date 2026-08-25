@@ -11,15 +11,20 @@ $ollamaExe = Assert-OllamaCommand
 if (Test-OllamaServer -OllamaHost $modelConfig.OllamaHost) {
     Write-Host "Ollama server is already responding at $($modelConfig.OllamaHost)."
     if (-not [string]::IsNullOrWhiteSpace($modelConfig.CudaVisibleDevices)) {
-        Write-Host "Note: cudaVisibleDevices in config only applies when this script starts the server. Quit the running Ollama (task tray) and rerun this script to apply GPU selection."
+        Write-Host "Note: GPU selection only applies when this script starts the server. Run scripts\stop-ollama-server.ps1 and rerun this script to apply it."
     }
     exit 0
 }
 
-if (-not [string]::IsNullOrWhiteSpace($modelConfig.CudaVisibleDevices)) {
+$gpuSelection = Resolve-GpuSelection `
+    -CudaVisibleDevices $modelConfig.CudaVisibleDevices `
+    -PreferredGpuNamePattern $modelConfig.PreferredGpuNamePattern
+
+Write-Host $gpuSelection.Description
+if (-not [string]::IsNullOrWhiteSpace($gpuSelection.Value)) {
     $env:CUDA_DEVICE_ORDER = "PCI_BUS_ID"
-    $env:CUDA_VISIBLE_DEVICES = $modelConfig.CudaVisibleDevices
-    Write-Host "Restricting Ollama to GPU(s): $($modelConfig.CudaVisibleDevices)"
+    $env:CUDA_VISIBLE_DEVICES = $gpuSelection.Value
+    Write-Host "CUDA_VISIBLE_DEVICES=$($gpuSelection.Value)"
 }
 
 Write-Host "Starting Ollama server at $($modelConfig.OllamaHost)..."
