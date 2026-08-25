@@ -4,7 +4,8 @@ Windows 11 で Ollama for Windows をインストールした後、以下を実�
 
 OllamaがまだインストールされていないPCでは、`-InstallOllama` を付けることでインストールできます。
 
-デフォルトのプロファイルを自動選択します。
+デフォルトのプロファイル（`qwen3-vl-8b-q4_K_M` / `qwen3-vl:8b-instruct-q4_K_M`）を自動選択します。
+使用するGPUも自動選択され、VRAM の大きい GPU（RTX 5000 Ada 32GB）に固定されます。
 
 ```powershell
 .\quick-setup.cmd
@@ -15,7 +16,14 @@ OllamaがまだインストールされていないPCでは、`-InstallOllama` �
 別のモデルプロファイルを選択する場合:
 
 ```powershell
+.\quick-setup.cmd -Profile qwen3-vl-4b-q4_K_M
 .\quick-setup.cmd -Profile gpt-oss-20b
+```
+
+選択されるGPUを事前に確認する場合:
+
+```powershell
+.\scripts\show-gpus.ps1
 ```
 
 モデルの再取得を省略する場合:

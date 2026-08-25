@@ -6,11 +6,13 @@ quick-setup.cmd で簡単にセットアップできます（何かしらエラ�
 ## 構成
 
 - API server: Ollama
-- 既定モデル: `qwen3-vl:32b-instruct-q4_K_M` (`qwen3-vl-32b-q4_K_M`)
-- デフォルト:
-  - `qwen3-vl:32b-instruct-q4_K_M`
-- 参考:
-  - `gpt-oss:20b`: chat-based の forensic benchmark で好成績。text のみ。
+- 既定モデル: `qwen3-vl:8b-instruct-q4_K_M` (`qwen3-vl-8b-q4_K_M`)
+  - 約 6GB。text / image 両対応。32B 版と同じ Qwen3-VL 系列で、動作が大幅に軽量です。
+- 参考（軽い順）:
+  - `qwen3-vl:4b-instruct-q4_K_M`: 約 3GB。8B でも重い場合や、12GB の GPU で動かす場合に使用します。
+  - `gpt-oss:20b`: 約 14GB。chat-based の forensic benchmark で好成績。text のみ。
+  - `qwen3-vl:30b-a3b-instruct-q4_K_M`: 約 20GB。MoE（有効パラメータ約 3B）のため、VRAM 使用量の割に応答が速いモデルです。品質を上げたいが速度も欲しい場合に使用します。
+  - `qwen3-vl:32b-instruct-q4_K_M`: 約 21GB。以前の既定モデル。品質は最も高いですが dense 32B のため最も遅くなります。
   - `qwen3.6:27b-q4_K_M`: より新しい Qwen 系列のモデル。text / image 両対応。
 - モデル設定: `config/ollama-models.json`
 
@@ -18,14 +20,14 @@ quick-setup.cmd で簡単にセットアップできます（何かしらエラ�
 ```text
 Base URL: http://localhost:11434/v1
 Chat endpoint: http://localhost:11434/v1/chat/completions
-Model: qwen3-vl:32b-instruct-q4_K_M
+Model: qwen3-vl:8b-instruct-q4_K_M
 ```
 
 - Ollama protocol
 ```text
 Base URL: http://localhost:11434
 Chat endpoint: http://localhost:11434/api/chat
-Model: qwen3-vl:32b-instruct-q4_K_M
+Model: qwen3-vl:8b-instruct-q4_K_M
 ```
 
 ## 前提
@@ -50,7 +52,8 @@ Model: qwen3-vl:32b-instruct-q4_K_M
 
 - `ollamaHost`: Ollama native API の接続先
 - `openAiBaseUrl`: OpenAI互換 API の接続先
-- `cudaVisibleDevices`: 使用するGPUの指定（例: `"0"` で GPU 0 のみ使用）。空文字 `""` にすると全GPUを使用
+- `cudaVisibleDevices`: 使用するGPUの指定。`"auto"` で自動選択、`"0"` のように番号や UUID を書くと固定、空文字 `""` で全GPU使用
+- `preferredGpuNamePattern`: `"auto"` のときに優先するGPU名（部分一致・正規表現）
 - `defaultProfile`: プロファイル未指定時に使う profile 名（普段使用するモデルを設定してあげるとよいです）
 - `profiles`: 利用可能なモデル profile の一覧
 
@@ -94,11 +97,57 @@ Model: qwen3-vl:32b-instruct-q4_K_M
 
 ### GPU の指定
 
-`cudaVisibleDevices` に GPU 番号を設定すると、Ollama が使用するGPUを固定できます。番号は `nvidia-smi` の表示順です。
+GPU が複数ある環境では、VRAM の大きい GPU に固定したほうが安定します。本リポジトリの想定環境は次の 2 枚構成で、**NVIDIA RTX 5000 Ada (32GB)** を優先して使用します。
+
+```text
+NVIDIA RTX 5000 Ada Generation  32GB  <- 優先して使用
+NVIDIA RTX A2000                12GB
+```
+
+既定値は自動選択です。
 
 ```json
 {
-  "cudaVisibleDevices": "0"
+  "cudaVisibleDevices": "auto",
+  "preferredGpuNamePattern": "RTX 5000 Ada"
+}
+```
+
+`"auto"` のとき、`nvidia-smi` で検出した GPU から次の順で 1 枚を選びます。
+
+1. `preferredGpuNamePattern` に名前が一致する GPU（複数一致した場合は VRAM が最大のもの）
+2. 一致しない場合は VRAM が最大の GPU
+
+選ばれた GPU は番号ではなく UUID (`GPU-xxxxxxxx-...`) で固定するため、GPU の増設や差し替え、ドライバー更新で番号がずれても対象が変わりません。
+
+どの GPU が選択されるかは、起動前に確認できます。
+
+```powershell
+.\scripts\show-gpus.ps1
+```
+
+```text
+Detected GPUs ('*' is the one Ollama will be pinned to):
+
+Use Index Name                           VRAM_GB Uuid
+--- ----- ----                           ------- ----
+        0 NVIDIA RTX A2000                  12.0 GPU-xxxxxxxx-...
+*       1 NVIDIA RTX 5000 Ada Generation    32.0 GPU-yyyyyyyy-...
+```
+
+自動選択を使わず GPU を直接指定する場合は、`cudaVisibleDevices` に番号または UUID を書きます。番号は `nvidia-smi` の表示順です。
+
+```json
+{
+  "cudaVisibleDevices": "GPU-yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
+}
+```
+
+全GPUを使用する場合は空文字にします。
+
+```json
+{
+  "cudaVisibleDevices": ""
 }
 ```
 
@@ -121,7 +170,7 @@ NSSM サービスとして運用する場合、この設定は使われません
 
 ## 3. モデルを取得
 
-プロファイル未指定の場合、デフォルトの `qwen3-vl-32b-q4_K_M` を取得します。
+プロファイル未指定の場合、デフォルトの `qwen3-vl-8b-q4_K_M` を取得します。
 
 ```powershell
 .\scripts\setup-ollama.ps1
@@ -130,13 +179,14 @@ NSSM サービスとして運用する場合、この設定は使われません
 デフォルト以外のモデルを取得する場合は、必要なモデルだけを個別に指定します。
 
 ```powershell
+.\scripts\setup-ollama.ps1 -Profile qwen3-vl-4b-q4_K_M
 .\scripts\setup-ollama.ps1 -Profile gpt-oss-20b
-.\scripts\setup-ollama.ps1 -Profile qwen3.6-27b-q4_K_M
+.\scripts\setup-ollama.ps1 -Profile qwen3-vl-30b-a3b-q4_K_M
 ```
 
 ## 4. モデルをロードして保持
 
-プロファイル未指定の場合、`config/ollama-models.json` の `defaultProfile`、つまり `qwen3-vl-32b-q4_K_M` を使います。
+プロファイル未指定の場合、`config/ollama-models.json` の `defaultProfile`、つまり `qwen3-vl-8b-q4_K_M` を使います。
 
 ```powershell
 .\scripts\load-model.ps1
@@ -145,7 +195,7 @@ NSSM サービスとして運用する場合、この設定は使われません
 プロファイルを指定するとき、
 ```powershell
 .\scripts\load-model.ps1 -Profile gpt-oss-20b
-.\scripts\load-model.ps1 -Profile qwen3.6-27b-q4_K_M
+.\scripts\load-model.ps1 -Profile qwen3-vl-30b-a3b-q4_K_M
 ```
 
 各プロファイルの `keepAlive` は `-1m` です。Ollama の `keep_alive` に負の値を渡すことで、Ollama がモデルを自動アンロードしないようにします。
@@ -172,6 +222,13 @@ Windows 再起動、Ollama 終了、GPU メモリ不足、手動アンロード�
 
 ## 6. モデルを切り替える
 
+さらに軽くしたい場合（Qwen3-VL 4B）:
+
+```powershell
+.\scripts\load-model.ps1 -Profile qwen3-vl-4b-q4_K_M
+.\scripts\test-chat.ps1 -Profile qwen3-vl-4b-q4_K_M
+```
+
 gpt-oss に切り替える場合:
 
 ```powershell
@@ -179,26 +236,30 @@ gpt-oss に切り替える場合:
 .\scripts\test-chat.ps1 -Profile gpt-oss-20b
 ```
 
-Qwen3.6-27b に切り替える場合:
+品質を上げたい場合（Qwen3-VL 30B-A3B、MoE のため 32B より高速）:
 
 ```powershell
-.\scripts\load-model.ps1 -Profile qwen3.6-27b-q4_K_M
-.\scripts\test-chat.ps1 -Profile qwen3.6-27b-q4_K_M
+.\scripts\load-model.ps1 -Profile qwen3-vl-30b-a3b-q4_K_M
+.\scripts\test-chat.ps1 -Profile qwen3-vl-30b-a3b-q4_K_M
 ```
 
-Qwen3-32b-VL に切り替える場合:
+以前の既定モデル（Qwen3-VL 32B）に戻す場合:
 
 ```powershell
 .\scripts\load-model.ps1 -Profile qwen3-vl-32b-q4_K_M
 .\scripts\test-chat.ps1 -Profile qwen3-vl-32b-q4_K_M
 ```
 
+複数のモデルを同時にロードすると GPU メモリを取り合うため、切り替える前に使っていないモデルをアンロードしてください。
+
 ## モデルをメモリから下ろす
 
 ```powershell
-.\scripts\unload-model.ps1 -Profile qwen3-vl-32b-q4_K_M
+.\scripts\unload-model.ps1 -Profile qwen3-vl-8b-q4_K_M
+.\scripts\unload-model.ps1 -Profile qwen3-vl-4b-q4_K_M
 .\scripts\unload-model.ps1 -Profile gpt-oss-20b
-.\scripts\unload-model.ps1 -Profile qwen3.6-27b-q4_K_M
+.\scripts\unload-model.ps1 -Profile qwen3-vl-30b-a3b-q4_K_M
+.\scripts\unload-model.ps1 -Profile qwen3-vl-32b-q4_K_M
 ```
 
 サーバーは起動したまま、モデルだけがメモリから外れます。
